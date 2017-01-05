@@ -1,0 +1,193 @@
+@import "style/_normalize.scss";
+
+canvas {
+	background-color: transparent;
+	position: relative;
+	left: calc(50% - 250px);
+}
+
+blockquote {
+	padding: 2em 0;
+	line-height: 3;
+	font-size: 3em;
+	font-family: "SongTi TC";
+	font-style: italic;
+
+	border-top: 5px solid #aaa;
+	border-bottom: 5px solid #aaa;
+
+	&:before {
+		content: "’’";
+	}
+
+	&:after {
+		content: "’’";
+	}
+}
+
+section {
+	margin: 1em 0;
+}
+
+figure.landing {
+	padding-bottom: 20%;
+	margin: 0;
+	
+	background-repeat: repeat;
+	background-size: cover;
+	background-position: center center;
+	
+	// animation: move .5s linear infinite;
+
+}
+
+// @keyframes move {
+// 	0% {
+// 		background-position: 0 0;	
+// 	}
+
+// 	100% {
+// 		background-position: 0 102%;
+// 	}
+	
+// }
+
+.clearfix {
+	zoom: 1;
+
+	&:before,
+	&:after {
+		content: '';
+		display: table;
+
+		clear: both;
+	}
+}
+
+.site-title {
+	font-size: 3rem;
+	color: #fff;
+	letter-spacing: 3px;
+}
+.text-center {
+	text-align: center;
+}
+
+.loser-title {
+	position: relative;
+	padding: .8em 0;
+	font-size: 2em;
+	text-align: center;
+	color: #343434;
+	font-family: "SongTi TC";
+	
+	&:before,
+	&:after {
+		content: "";
+		display: block;
+		position: absolute;
+		left: calc(50% - 2.5em);
+
+		width: 5em;
+		height: 5px;
+
+		background-color: lighten(#343434, 20%);
+	}
+
+	&:before {
+		top: 0px;
+	}
+
+	&:after {
+		bottom: 0px;
+	}
+}
+
+.loser-section {
+	float: left;
+	width: 48%;
+	min-height: 500px;
+	&.black { 
+		background-color: #000;
+		color: #fff;
+	}
+
+	&.white {
+		background-color: #fff;
+		color: #000;
+	}
+}
+
+.feature-text {
+	font-size: 3em;
+	font-weight: bold;
+
+	font-family: SongTi TC;
+}
+
+
+button,
+[role="button"]
+[class*="btn-"] {
+  border: 0;
+}
+
+
+// @mixin _btn create btn class
+// only use this mixin in btn file.
+// 
+// @param $btn-name [String]
+// it will create a class call .btn-#{$btn-name}, and auto extend button panel.
+// 這個 mixin 會產生一個 .btn-#{$btn-name} 的 class 並且繼承 %btn-panel
+// 
+@mixin _btn($btn-name) {
+  .btn-#{$btn-name} {
+    @extend %btn-panel;
+    @content;
+  }
+}
+
+%btn-panel {
+  display: inline-block;
+  padding: .65rem 1.5rem;
+
+  font-size: f(em);
+  vertical-align: middle;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  border: 0;
+
+  &:focus {
+    outline: 1px solid var(--light-blue);
+    outline: 1px solid c(light-blue);
+  }
+}
+
+
+@include _btn(primary) {
+  padding: .7rem 2rem;
+
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 3px;
+  letter-spacing: 2px;
+
+  background-color: darken(#27cc95, 20%);
+}
+
+
+.loser-feature-section {
+	display: flex;
+	justify-content: space-between;
+
+	& > div { flex: 2; }
+
+	& > aside { flex: 1; 
+		img { max-width: 100%; }
+	}
+}
+

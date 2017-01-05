@@ -4,25 +4,338 @@
 	<meta charset="UTF-8">
 	<title>Loser</title>
 	<!-- TODO add meta tags -->
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+	<script src="typed.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.3.2/gl-matrix-min.js"></script>
+  
+  <script id="shader-vs" type="x-shader/x-vertex">
+  attribute vec4 coords;
+  attribute vec2 textureCoords;
+  attribute float pointSize;
+  uniform mat4 u_transformMatrix;
+  uniform mat4 u_perspectiveMatrix;
+  attribute vec4 colors;
+  varying vec4 varyingColors;
+  
+  varying vec2 v_textureCoords;
+
+  void main(void) {
+    v_textureCoords = textureCoords;
+    gl_Position = u_perspectiveMatrix * u_transformMatrix  * coords;
+    gl_PointSize = pointSize;
+    varyingColors = colors;
+  }
+  </script>
+  
+  <script id="shader-fs" type="x-shader/x-fragment">
+  precision mediump float;
+  uniform vec4 color;
+  varying vec4 varyingColors;
+  
+  varying vec2 v_textureCoords;
+  uniform sampler2D sampler;
+  void main(void) {
+    gl_FragColor = texture2D(sampler, v_textureCoords);
+  }
+  </script>
+	<link rel="stylesheet" href="main.css">
 </head>
 <style>
 	:root {
-		cursor: url('https://raw.githubusercontent.com/kjj6198/loser/master/PIXILART-LOCAL.png'), auto;
+		cursor: url('https://raw.githubusercontent.com/kjj6198/loser/master/cursor.png'), auto;
 	}
 </style>
-<body style="cursor: url('https://raw.githubusercontent.com/kjj6198/loser/master/PIXILART-LOCAL.png'), auto;">
-	<header></header>
+<body>
+	
 	<main>
-		<figure>
-			<canvas id="loser-logo"></canvas>
-			<h2 class="text-center">魯蛇</h2>
-			<h3 class="text-center">與他的小夥伴</h3>
+
+		<figure class="landing" style="background-image: url('landing.jpg')">
+			<canvas id="canvas" width="500" height="500"></canvas>
+			<h1 class="site-title text-center" style="font-family: BiauKai; font-size: 5em;">魯蛇</h1>
+			<h3 class="text-center">與他快樂的小夥伴</h3>
 		</figure>
 
-		<section>
+		<section class="clearfix">
 			<h2 class="loser-title">負能量，才是人生的座右銘</h2>
-			<p></p>
+
+			<div class="loser-section black">
+				<p class="feature-text">
+					人生不是一道非黑即白的是非題
+				</p>
+			</div>
+
+			<div class="loser-section white">
+				<p class="feature-text">
+					而是怎麼做都錯的無實數解方程式題
+				</p>
+			</div>
+		  
 		</section>
+		
+		<section class="loser-feature-section">
+			<aside><img src="snake-1.png" alt=""></aside>
+			<div>
+				<p class="feature-text" id="typed">
+				</p>
+			</div>
+			<aside><img src="snake-2.png" alt=""></aside>
+		</section>
+
+		<section>
+			<blockquote class="text-center">
+			  <span>在魯蛇的路上，你絕對不是孤單一人</span>
+			</blockquote>
+		</section>
+		<section class="text-center">
+			<a class="btn-primary" href="https://www.facebook.com/%E5%89%8D%E7%AB%AF%E6%9B%AC%E8%A1%A3%E5%A0%B4-171248446602881/?fref=ts">馬上開始魯蛇的慰藉</a>
+		</section>
+
 	</main>
 </body>
+<script src="main.js"></script>
+<script>
+
+	$("#typed").typed({
+      strings: ["所以，在魯蛇的路上，負能量將給你", "滿滿的", "負能量"],
+      typeSpeed: 100,
+      startDelay: 5000,
+
+
+  });
+
+  var matrix = mat4.create();
+
+  function handleTextureLoaded(gl, texture,image) {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // 紋理座標垂直翻轉
+    
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    
+  }
+
+  function initGL() {
+     var canvas = document.querySelector('#canvas');
+     var gl = canvas.getContext('webgl');
+     
+     // uncomment to enable gl.DEPTH_TEST
+     gl.enable(gl.DEPTH_TEST);
+     gl.viewport(0,0, canvas.width, canvas.height);
+     
+    
+     return gl;
+  }
+
+  // shader
+  // OpenGL Shader
+  // GLSL
+
+  // vec4 vector 3 x,y,z w
+  function createShaders(gl, type) {
+    var shaderScript = '';
+    var shader;
+
+    switch(type) {
+      case 'fragment':
+        shaderScript = document.querySelector('#shader-fs').textContent;
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+        break;
+      case 'vertex':
+        shaderScript = document.querySelector('#shader-vs').textContent;
+        shader = gl.createShader(gl.VERTEX_SHADER);
+        break;
+    }
+
+    gl.shaderSource(shader, shaderScript);
+    gl.compileShader(shader);
+    
+    return shader;
+  }
+
+  function initShaders(gl) {
+    var vertexShader = createShaders(gl, 'vertex');
+    var fragmentShader = createShaders(gl, 'fragment');
+    
+    var shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+    gl.useProgram(shaderProgram);
+    
+    return shaderProgram;
+  }
+
+  function times(times) {
+    var array = [];
+    for(var i = 0; i < times; i++) {
+      array.push(null);
+    }
+    
+    return array;
+  }
+
+  function createTexture(gl, program) {
+    var textureCoords = [
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+      
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+      
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      1.0, 0.0,
+      
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+      
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+    ];
+    
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+    
+    var textureCoords = gl.getAttribLocation(program, 'textureCoords');
+    gl.vertexAttribPointer(textureCoords, 2, gl.FLOAT, false, 0,0);
+    gl.enableVertexAttribArray(textureCoords);
+    
+    return buffer;
+    
+    
+  }
+
+  function createPoints(gl, program) {
+    var vertices = [
+      -1, -1, -1,     1, 0, 0, 1,     // 0
+       1, -1, -1,     1, 1, 0, 1,     // 1
+      -1,  1, -1,     0, 1, 1, 1,     // 2
+       1,  1, -1,     0, 0, 1, 1,     // 3
+      -1,  1,  1,     1, 0.5, 0, 1,   // 4
+       1,  1,  1,     0.5, 1, 1, 1,   // 5
+      -1, -1,  1,     1, 0, 0.5, 1,   // 6
+       1, -1,  1,     0.5, 0, 1, 1,   // 7
+    ];
+
+    var vertexCount = vertices.length / 7;
+    
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    
+    var coords = gl.getAttribLocation(program, "coords");
+    gl.vertexAttribPointer(coords, 3, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT * 7, 0);
+    gl.enableVertexAttribArray(coords);  
+    
+    var colorsLocation = gl.getAttribLocation(program, "colors");
+    gl.vertexAttribPointer(colorsLocation, 4, gl.FLOAT, false, Float32Array.BYTES_PER_ELEMENT * 7, Float32Array.BYTES_PER_ELEMENT * 3);
+   
+    gl.enableVertexAttribArray(colorsLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    
+    var pointSize = gl.getAttribLocation(program, "pointSize");
+    gl.vertexAttrib1f(pointSize, 20);
+    
+    var perspectiveMatrix = mat4.create();
+    mat4.perspective(perspectiveMatrix, 1, canvas.width / canvas.height, 1, 11);
+    var perspectiveLoc = gl.getUniformLocation(program, 'u_perspectiveMatrix');
+    gl.uniformMatrix4fv(perspectiveLoc, false, perspectiveMatrix);
+    
+    mat4.translate(matrix, matrix, [0, 0, -4]);
+  }
+
+  function createIndices(gl) {
+    var indices = [
+      0, 1, 2,   1, 2, 3,
+      2, 3, 4,   3, 4, 5,
+      4, 5, 6,   5, 6, 7,
+      6, 7, 0,   7, 0, 1,
+      0, 2, 6,   2, 6, 4,
+      1, 3, 7,   3, 7, 5
+    ];
+    var indexCount = indices.length;
+    
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+    
+    return indexCount;
+  }
+
+  function draw(gl, vertices, shaderProgram, indexCount) {
+    
+    // mat4.rotateX(matrix, matrix, -0.007);
+    mat4.rotateY(matrix, matrix, 0.01);
+    // mat4.rotateZ(matrix, matrix, 0.01);
+    var transformMatrix = gl.getUniformLocation(shaderProgram, "u_transformMatrix");
+    gl.uniformMatrix4fv(transformMatrix, false, matrix);
+    
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    
+    var sampler = gl.getUniformLocation(shaderProgram, 'sampler');
+    gl.uniform1i(sampler, 0);
+    
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+    // gl.drawElements(gl.LINE_LOOP, indexCount, gl.UNSIGNED_BYTE, 0);
+    const bindDraw = (gl, vertices, shaderProgram, indexCount) => () => {
+      draw(gl, vertices, shaderProgram, indexCount);
+    }
+    requestAnimationFrame(bindDraw(gl, vertices, shaderProgram, indexCount));
+  }
+
+  function initImage(gl) {
+    var cubeTexture = gl.createTexture();
+    var image = new Image();
+    image.crossOrigin = '';
+    image.src = 'loser.jpg';
+    
+    image.onload = function() {
+      handleTextureLoaded(gl, cubeTexture, image);
+    }
+  }
+
+  function main() {
+    var gl = initGL();
+    var shaderProgram = initShaders(gl);
+    var vertices = createPoints(gl, shaderProgram);
+    var indexCount = createIndices(gl);
+    initImage(gl);
+    createTexture(gl, shaderProgram);
+    draw(gl, vertices, shaderProgram, indexCount);
+  }
+
+  main();
+</script>
 </html>
